@@ -2,6 +2,7 @@
 #include <evntrace.h>
 #include <tdh.h>
 #include <iostream>
+#include <thread>
 
 #pragma comment(lib, "tdh.lib")
 
@@ -86,13 +87,18 @@ int main()
 
     std::cout << "Listening for events..." << std::endl;
 
-    // Step 5: Process events (blocking call)
-    ProcessTrace(&traceHandle, 1, nullptr, nullptr);
-    std::cout << "1 Event captured..." << std::endl;
+    // Step 5: Process events (in a separate thread since it is ablocking call)
+    std::thread traceLoopThread([&]() {
+        ProcessTrace(&traceHandle, 1, nullptr, nullptr);
+		});
 
-    // Cleanup (never reached in this simple example)
+	std::cout << "Press Enter to stop..." << std::endl;
+	std::cin.get();
+
+    // Cleanup
     CloseTrace(traceHandle);
     ControlTrace(sessionHandle, sessionName, props, EVENT_TRACE_CONTROL_STOP);
+    traceLoopThread.join();
 
     return 0;
 }
